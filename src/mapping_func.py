@@ -32,7 +32,7 @@ def mapping_func(node_genrator, words, case):
     
     return mapped
 
-def reducing_func(mapped_list)
+def reducing_func(mapped_list):
     """
         Given a list of dict mapped dict
     """
