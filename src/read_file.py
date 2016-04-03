@@ -4,7 +4,7 @@
 
 from itertools import islice
 
-def read_file(num_lines_per_node, num_nodes, rank, file_obj, num_last_line=0):
+def read_file(num_lines_per_node, num_nodes, rank, file_obj):
     """
         This is for a cluster. For each cluster it will read files as genrator
 
@@ -18,10 +18,9 @@ def read_file(num_lines_per_node, num_nodes, rank, file_obj, num_last_line=0):
     """
     start_line = rank*num_lines_per_node
 
-    if not num_last_line and rank = num_nodes - 1:
-        node_iterator = islice(file_obj, start_line, num_lines_per_node)
+    if rank == num_nodes - 1: 
+        node_iterator = islice(file_obj, start_line, None)
     else:
-        node_iterator = islice(file_obj, start_line, num_last_line)
+        node_iterator = islice(file_obj, start_line, num_lines_per_node*(rank+1))
 
-    #start_line += num_lines_per_node
     return node_iterator
