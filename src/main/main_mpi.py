@@ -2,10 +2,10 @@
     This module we mpi for running in different threads    
 """
 
-from src.mpi4py         import MPI
-from src.read_file      import read_file
-from src.mapping_func   import mapping_func, reducing_func
-from src.helping_func   import clear_cache, get_approx_file_size
+from mpi4py                                 import MPI
+from src.file_manage.read_file              import read_file
+from src.map_reduce.mapping_func            import mapping_func, reducing_func
+from src..hellping_functions.helping_func   import clear_cache, get_approx_file_size
 
 import os
 import time
