@@ -2,6 +2,9 @@
     Module for performing the mapping and the reduced fucntion
 """
 
+from collections import Counter
+import numpy as np
+
 def word_count(line, mapped, case):
     """
         line is a single line from a file
@@ -17,26 +20,23 @@ def word_count(line, mapped, case):
     for word in mapped:
         mapped[word] += line.count(word)
 
-def mapping_func(node_genrator, words, case):
+def mapping_func(file_data):
     """
-        This will be performing the mapping_function
-        node_genrator is the genrator consisting of the lines from a file
-        case is bool which will consider lower case or not
-            -> True (will consider different case
-            -> False (will perform the lower function on the line)
+        file_data is the scattered file split with '\n' and is a numpy array
+        mapped_data is a numpy array of the the form (word, 1)
     """
-    mapped = dict((word, 0) for word in words)
-
-    for line in node_genrator:
-        word_count(line, mapped, case)
+    print 'Here ->', len(file_data)
     
-    return mapped
+    final_mapped = np.array([word for line in file_data for word in line.split(' ')])
 
-def reducing_func(mapped_list):
+    return final_mapped
+
+def reducing_func(mapped_data):
     """
-        Given a list of dict mapped dict
+        Given a np array of the mapped values
     """
 
-    final_dict = reduce(lambda x, y: dict((k, v + y[k]) for k, v in x.iteritems()), mapped_list)
-
-    return final_dict
+    reduce_counter = Counter(mapped_data)
+    final_reduce   = np.array([(word,val) for word, val in reduce_counter.iteritems()]) 
+    
+    return final_reduce
