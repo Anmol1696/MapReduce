@@ -14,19 +14,21 @@ def get_data(username, password, file_name, list_num, client="http://varuna.aero
     oc.login(username, password)
 
     for i in list_num:
-        data_name = file_name + list_num + '.txt'
-        oc.get_file('Mapreduce/%s'%(data_name), 'data/%s'%(data_name))
+        data_name = str(file_name) + str(i) + '.txt'
+        print 'data_name -> ', data_name
+        oc.get_file('Mapreduce/' + data_name, 'data/' + data_name)
     
     return 0
 
-def call_get_data(json_file='own_cloud.json'):
+def call_get_data(json_file='src/helping_functions/own_cloud.json'):
     """
         Load the json data and pass is to get_data
         num_list parameter will be transmited by the ssh
     """
     json_data = open(json_file).read()
-    data = json.load(json_data)
+    print 'Data -> ', json_data
+    data = json.loads(json_data)
 
     get_data(data['username'], data['password'], data['file_name'], data['num_list'])
     
-    return 0
+    return (data['num_list'], data['file_name'])
