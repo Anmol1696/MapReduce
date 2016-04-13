@@ -2,33 +2,18 @@
     This module we mpi for running in different threads    
 """
 
-from mpi4py                                 import MPI
-from src.file_manage.read_file              import read_file
-from src.map_reduce.mapping_func            import mapping_func, reducing_func
-from src..hellping_functions.helping_func   import clear_cache, get_approx_file_size
-
+from mpi4py import MPI
 import os
 import time
 import numpy as np
-"""
-def count_lines(file_name):
-    
-        #Finding the total number of lines in the given file
-    
-    num_lines = sum(1 for line in open(file_name))
 
-    return num_lines
 
-def get_words():
-    
-    #    Get the list of words for which the word count is used
-    #    for testing just,
-    
-    words = np.array(['the', 'a'])
+from src.file_manage.read_file              import read_file
+from src.map_reduce.mapping_func            import mapping_func, reducing_func
+from src.helping_functions.helping_func    import clear_cache, get_approx_file_size
+from src.helping_functions.download_data                      import call_get_data
 
-    return words
-"""
-def main_work(file_name, cluster_size):
+def main_work(download=False):
     """
         This functions performs the main_func of dividing the work and all
         cluster_rank -> rank of the cluster
@@ -41,34 +26,46 @@ def main_work(file_name, cluster_size):
 
     cluster_rank = 0
     
-    lines_data = []
     if rank == 0:
-        num_lines       = get_approx_file_size(file_name)
-        lines_data      = np.array([num_lines, num_lines/cluster_size])
-        #print 'Lines data -> ', lines_data
+        if download:
+            print 'Downloading data....'
+            num_list, file_name = call_get_data()
+            clear_cache()
+            print 'Done downloading data'
+            file_num = num_list[0]
+        else:
+            file_num = 2
+            file_name = 'file_'
+
+        print 'Reading file to ram'
+        read_file = open('data/' + file_name + str(file_num) + '.txt').read()
+        read_file = np.array(read_file.split('\n'))
+        clear_cache()
+        print 'Done'
+
+        #Now will be scatterting this data into the othermpi's
+        chunk = len(read_file)/size
+        for i in range(1, size):
+            if i != size - 1:
+                comm.send(read_file[chunk*i : chunk*(i+1)], dest=i, tag=11)
+            else:
+                comm.send(read_file[chunk*i:], dest=i, tag=11)
+
+        read_file = read_file[:chunk]
+
     else:
-        lines_data = np.array([0, 0])
-        words = comm.recv(source=0, tag=0)
+        read_file = comm.recv(source=0, tag=11)
 
-    comm.Bcast(lines_data, root=0)
-
-    with open(file_name) as file_obj:
-        node_iterator = read_file(lines_data[1], size, cluster_rank, file_obj)
-        mapped = mapping_func(node_iterator, words, case=False)
+    mapped_data = mapping_func(read_file)
+    clear_cache()
+     
+    print 'mapped_data for the rank->', rank, 'Mapped len is ', len(mapped_data) 
     
-    if rank != 0:
-        comm.send(mapped, dest=0, tag=1)
-    else:
-        mapped_list = [comm.recv(source=i, tag=1) for i in range(1, size)]
-        
-        # Performing reducing function (for now only on the master node)
-        mapped_list.append(mapped)
-        final_dict = reducing_func(mapped_list)
+    reduced_data = reducing_func(mapped_data)
+    print reduced_data
+    clear_cache()
 
-        #printing
-        print 'Final_result -> \n', final_dict
-
-    print 'Done with rank -> ', rank
-
+    print 'reduced data from rank ', rank, 'reduce len is', len(reduced_data)
+    
 if __name__ == '__main__':
-    main_work('data/file.txt')
+    main_work()
