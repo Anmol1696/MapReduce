@@ -37,6 +37,44 @@ def reducing_func(mapped_data):
     """
 
     reduce_counter = Counter(mapped_data)
-    final_reduce   = np.array([(word,val) for word, val in reduce_counter.iteritems()]) 
+    final_reduce   = np.array([(word,val) for word, val in reduce_counter.iteritems()], dtype='|S15, i8') 
     
     return final_reduce
+"""
+def final_reduce_1(list_reduced_data):
+    
+    #    given a list of the reduced data from each node this will reduce
+    
+    reduced_final = []
+    unique_words_index = []
+
+    list_reduced = list_reduced_data[0]
+
+    for reduced in list_reduced_data[1:]:
+        list_reduced = np.concatenate((list_reduced, reduced))
+    print 'Converted to numpy...'
+
+    for word, val in list_reduced:
+        index_array = np.where(list_reduced==word)[0]
+        
+        if str(index_array) not in unique_words_index:
+            unique_words_index.append(str(index_array))
+            val_sum = sum([int(list_reduced[i][1]) for i in index_array])
+            reduced_final.append((word, val_sum))
+
+    return np.array(reduced_final, dtype='|S15, i8')
+"""
+def final_reduce(list_reduced_data):
+    """
+        reduce the final by using dicts
+    """
+    final_dict = [Counter(dict(data)) for data in list_reduced_data]
+
+    print 'Done with the dict'
+    
+    final_dict_data = Counter(dict())
+
+    for data in final_dict:
+        final_dict_data += data
+
+    return np.array(zip(final_dict_data.keys(), final_dict_data.values()))
